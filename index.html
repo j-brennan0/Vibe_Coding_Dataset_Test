@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OCHA Incident Dashboard</title>
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<style>
+:root {
+  --primary: #009EDB;
+  --dark-blue: #004987;
+  --bg: #f4f7fa;
+  --text: #2b2b2b;
+  --muted: #6c757d;
+  --accent: #c0392b;
+
+  --spacing: 16px;
+  --radius: 4px;
+}
+
+body {
+  margin: 0;
+  font-family: "Roboto", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* HEADER */
+.header {
+  background: var(--primary);
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header img {
+  height: 40px;
+}
+
+.header-actions {
+  text-align: right;
+}
+
+.header button {
+  background: white;
+  color: var(--primary);
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.banner {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* PAGE */
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+/* GRID */
+.dashboard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.section {
+  background: white;
+  padding: 15px;
+}
+
+/* KPI */
+.kpis {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.kpi {
+  flex: 1;
+}
+
+.kpi strong {
+  font-size: 18px;
+}
+
+/* MAP */
+#map {
+  height: 300px;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+td, th {
+  padding: 6px;
+  font-size: 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* FOOTER */
+.footer {
+  background: #333;
+  color: #ccc;
+  padding: 20px;
+  font-size: 12px;
+}
+
+.footer a {
+  color: #ccc;
+}
+
+/* STATES */
+#loading { text-align: center; }
+#empty { display: none; text-align: center; }
+
+/* RESPONSIVE */
+@media(max-width: 768px){
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <img src="OCHA Logo_beside_blue.png"/>
+  <div class="header-actions">
+    <button onclick="downloadData()">Download Dataset</button>
+    <div class="banner">For Internal Use Only</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+<h1>Global IO Worker Incident Dashboard</h1>
+
+<div id="loading">Loading data...</div>
+<div id="empty">No data available for selected filters</div>
+
+<div class="dashboard">
+
+<!-- KPI -->
+<div class="section">
+  <h3>Top Country KPIs</h3>
+  <div class="kpis">
+    <div class="kpi"><strong id="country"></strong><br>Top Country</div>
+    <div class="kpi"><strong id="incidents"></strong><br>Incidents</div>
+    <div class="kpi"><strong id="killed"></strong><br>Killed</div>
+    <div class="kpi"><strong id="affected"></strong><br>Total Affected</div>
+  </div>
+</div>
+
+<!-- MAP -->
+<div class="section">
+  <h3>Areas of Risk</h3>
+  <div id="map"></div>
+</div>
+
+<!-- BAR -->
+<div class="section">
+  <h3>Casualties by Organization</h3>
+  <canvas id="barChart"></canvas>
+</div>
+
+<!-- PIE -->
+<div class="section">
+  <h3>Incident Motives</h3>
+  <canvas id="pieChart"></canvas>
+</div>
+
+</div>
+
+<!-- TABLE -->
+<div class="section">
+<h3>Incident Records</h3>
+<table>
+<thead>
+<tr>
+<th>Country</th>
+<th>Year</th>
+<th>Motive</th>
+<th>Total Affected</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div>Feedback: <a href="mailto:your.name@un.org">your.name@un.org</a></div>
+  <div>
+    <a href="https://www.un.org/en/about-us/terms-of-use">Terms</a> |
+    <a href="https://www.un.org/en/about-us/privacy-notice">Privacy</a> |
+    <a href="https://www.un.org/en/about-us/copyright">Copyright</a>
+  </div>
+  <div>Data may contain limitations.</div>
+</div>
+
+<script>
+let rawData = [];
+let map;
+let barChart, pieChart;
+
+async function loadData(){
+  try{
+    let res = await fetch("global-security-incidents.csv");
+    let text = await res.text();
+
+    let rows = text.split("\n").slice(1);
+    rawData = rows.map(row=>{
+      let cols = row.split(",");
+      return {
+        country: cols[5],
+        lat: parseFloat(cols[36]),
+        lon: parseFloat(cols[37]),
+        motive: cols[38],
+        affected: parseInt(cols[28]) || 0,
+        killed: parseInt(cols[24]) || 0,
+        orgTotal:
+          (+cols[9]||0)+(+cols[10]||0)+(+cols[11]||0)
+      };
+    });
+
+    console.log("Raw data:", rawData);
+
+    initDashboard();
+
+  } catch(e){
+    document.getElementById("loading").innerText="Error loading data";
+  }
+}
+
+function initDashboard(){
+  document.getElementById("loading").style.display="none";
+
+  if(!rawData.length){
+    document.getElementById("empty").style.display="block";
+    return;
+  }
+
+  updateKPI();
+  initMap();
+  drawBar();
+  drawPie();
+  populateTable();
+}
+
+function updateKPI(){
+  let grouped = {};
+  rawData.forEach(d=>{
+    grouped[d.country]= (grouped[d.country]||0)+d.affected;
+  });
+
+  let top = Object.entries(grouped).sort((a,b)=>b[1]-a[1])[0];
+
+  document.getElementById("country").innerText = top[0];
+  document.getElementById("affected").innerText = top[1];
+  document.getElementById("incidents").innerText = rawData.length;
+  document.getElementById("killed").innerText =
+    rawData.reduce((a,b)=>a+b.killed,0);
+}
+
+function initMap(){
+  map = L.map('map').setView([10,0],2);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+    .addTo(map);
+
+  rawData.forEach(d=>{
+    if(d.lat && d.lon)
+      L.circle([d.lat,d.lon],{
+        radius:20000,
+        color:"#c0392b"
+      }).addTo(map);
+  });
+}
+
+function drawBar(){
+  let data = {};
+  rawData.forEach(d=>{
+    data[d.country]=(data[d.country]||0)+d.killed;
+  });
+
+  barChart = new Chart(document.getElementById("barChart"),{
+    type:"bar",
+    data:{
+      labels:Object.keys(data).slice(0,10),
+      datasets:[{
+        data:Object.values(data).slice(0,10),
+        backgroundColor:"#004987"
+      }]
+    }
+  });
+}
+
+function drawPie(){
+  let data = {};
+  rawData.forEach(d=>{
+    data[d.motive]=(data[d.motive]||0)+1;
+  });
+
+  pieChart = new Chart(document.getElementById("pieChart"),{
+    type:"pie",
+    data:{
+      labels:Object.keys(data).slice(0,5),
+      datasets:[{
+        data:Object.values(data).slice(0,5)
+      }]
+    }
+  });
+}
+
+function populateTable(){
+  let table = document.getElementById("tableBody");
+  rawData.slice(0,20).forEach(d=>{
+    let tr = `<tr>
+    <td>${d.country}</td>
+    <td>-</td>
+    <td>${d.motive}</td>
+    <td>${d.affected}</td>
+    </tr>`;
+    table.innerHTML += tr;
+  });
+}
+
+function downloadData(){
+  window.open("global-security-incidents.csv");
+}
+
+loadData();
+</script>
+
+</body>
+</html>
