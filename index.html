@@ -3,225 +3,221 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>OCHA Displacement Dashboard</title>
 
-<!-- Font -->
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet"/>
 
 <style>
-:root {
-  --primary: #009EDB;
-  --dark-blue: #004987;
-  --bg: #f4f7fb;
-  --text: #1a1a1a;
-  --muted: #6b7280;
-  --border: #e5e7eb;
-  --accent-red: #c43c3c;
+:root{
+--blue:#009EDB;
+--dark:#004987;
+--bg:#f4f7fb;
+--text:#1a1a1a;
+--border:#e5e7eb;
+--muted:#6b7280;
+--red:#c43c3c;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Roboto', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.5;
+body{
+margin:0;
+font-family:Roboto, sans-serif;
+background:var(--bg);
+color:var(--text);
 }
 
 /* HEADER */
-.global-header {
-  background: var(--primary);
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 12px 24px;
+.header{
+background:var(--blue);
+color:white;
+display:flex;
+justify-content:space-between;
+padding:12px 24px;
+align-items:flex-start;
 }
 
-.logo {
-  height: 40px;
+.logo{
+height:40px;
 }
 
-.header-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+.header-right{
+display:flex;
+flex-direction:column;
+align-items:flex-end;
 }
 
-.download-btn {
-  background: white;
-  color: var(--primary);
-  padding: 6px 12px;
-  border: none;
-  cursor: pointer;
+.download{
+background:white;
+color:var(--blue);
+border:none;
+padding:6px 12px;
+cursor:pointer;
 }
 
-.internal-banner {
-  margin-top: 4px;
-  font-size: 12px;
+.banner{
+font-size:12px;
+margin-top:4px;
 }
 
-/* PAGE HEADER */
-.page-header {
-  padding: 24px;
-  max-width: 1200px;
-  margin: auto;
+/* PAGE */
+.container{
+max-width:1200px;
+margin:auto;
+padding:20px;
 }
 
-.page-header h1 {
-  font-size: 24px;
-  font-weight: 700;
+.title{
+font-size:24px;
+font-weight:700;
+margin-bottom:20px;
 }
 
-/* LAYOUT */
-.container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 16px;
+/* GRID */
+.dashboard{
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:16px;
 }
 
-.dashboard {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 16px;
+.right{
+display:grid;
+gap:16px;
 }
 
-.right-panel {
-  display: grid;
-  grid-template-rows: auto auto;
-  gap: 16px;
+/* SECTIONS */
+.section{
+background:white;
+border:1px solid var(--border);
+padding:16px;
 }
 
-.section {
-  background: white;
-  padding: 16px;
-  border: 1px solid var(--border);
+/* MAP */
+#map{
+height:420px;
 }
 
-/* KPI CARDS */
-.kpis {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+/* KPI */
+.kpis{
+display:flex;
+gap:12px;
+flex-wrap:wrap;
 }
 
-.kpi {
-  flex: 1;
-  min-width: 120px;
+.kpi{
+flex:1;
+min-width:120px;
 }
 
-.kpi h3 {
-  font-size: 14px;
-  color: var(--muted);
+.kpi h4{
+font-size:12px;
+color:var(--muted);
 }
 
-.kpi p {
-  font-size: 18px;
-  font-weight: 500;
+.kpi p{
+font-size:18px;
+font-weight:500;
 }
 
 /* CHART */
-.bar {
-  height: 20px;
-  background: var(--primary);
-  margin-bottom: 6px;
+.bar{
+height:18px;
+background:var(--blue);
+margin:6px 0;
 }
 
 /* TABLE */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
+table{
+width:100%;
+border-collapse:collapse;
+font-size:12px;
 }
-
-th, td {
-  border-bottom: 1px solid var(--border);
-  padding: 6px;
-  text-align: left;
+td,th{
+border-bottom:1px solid var(--border);
+padding:6px;
 }
 
 /* FOOTER */
-.footer {
-  margin-top: 40px;
-  background: #1d2630;
-  color: #ccc;
-  padding: 20px;
-  font-size: 12px;
+.footer{
+background:#1d2630;
+color:#ccc;
+padding:20px;
+margin-top:40px;
+font-size:12px;
 }
+.footer a{color:#ccc}
 
-.footer a {
-  color: #ccc;
+/* STATES */
+.loading{
+opacity:0.5;
+}
+.empty{
+color:var(--red);
 }
 
 /* RESPONSIVE */
-@media(max-width: 768px) {
-  .dashboard {
-    grid-template-columns: 1fr;
-  }
+@media(max-width:768px){
+.dashboard{
+grid-template-columns:1fr;
 }
+}
+
 </style>
 </head>
 
 <body>
 
 <!-- HEADER -->
-<div class="global-header">
-  <img src="OCHA-Logo.png" class="logo">
-  <div class="header-right">
-    <select class="download-btn">
-      <option>Download Dataset</option>
-      <option>Repository JSON</option>
-    </select>
-    <div class="internal-banner">For Internal Use Only</div>
-  </div>
-</div>
+<div class="header">
+<img src="OCHA-Logo.png" class="logo">
 
-<div class="page-header">
-  <h1>Displacement from Natural Hazard Events — South Africa</h1>
+<div class="header-right">
+<select class="download">
+<option>Download Dataset</option>
+<option>repository.json</option>
+</select>
+<div class="banner">For Internal Use Only</div>
+</div>
 </div>
 
 <div class="container">
+
+<div class="title">
+Displacement from Natural Hazard Events — South Africa
+</div>
+
+<div id="loadingState">Loading data...</div>
+<div id="emptyState" class="empty" style="display:none;">
+No data available for selected filters
+</div>
 
 <div class="dashboard">
 
 <!-- MAP -->
 <div class="section">
-  <h2>Impacted Locations Map</h2>
-  <div id="map">Map Loading...</div>
+<h3>Impacted Locations</h3>
+<div id="map"></div>
 </div>
 
-<div class="right-panel">
+<div class="right">
 
 <!-- CHART -->
 <div class="section">
-  <h2>Disaster Frequency</h2>
-  <div id="chart"></div>
+<h3>Disaster Frequency</h3>
+<div id="chart"></div>
 </div>
 
-<!-- KPI PANEL -->
+<!-- KPI -->
 <div class="section">
-  <h2>Duration KPIs</h2>
+<h3>Duration Overview</h3>
 
-  <div class="kpis">
-    <div class="kpi">
-      <h3>Average Duration</h3>
-      <p id="avg-duration">-</p>
-    </div>
-    <div class="kpi">
-      <h3>Max Duration</h3>
-      <p id="max-duration">-</p>
-    </div>
-    <div class="kpi">
-      <h3>Min Duration</h3>
-      <p id="min-duration">-</p>
-    </div>
-  </div>
+<div class="kpis">
+<div class="kpi"><h4>Average</h4><p id="avg"></p></div>
+<div class="kpi"><h4>Max</h4><p id="max"></p></div>
+<div class="kpi"><h4>Min</h4><p id="min"></p></div>
+</div>
 
-  <div id="kpi-details"></div>
+<div id="details"></div>
 
 </div>
 </div>
@@ -229,88 +225,104 @@ th, td {
 
 <!-- TABLE -->
 <div class="section">
-  <h2>Incident Table</h2>
-  <table id="data-table"></table>
+<h3>Incident Table</h3>
+<table id="table"></table>
 </div>
 
 </div>
 
 <!-- FOOTER -->
 <div class="footer">
-  <p><strong>Feedback:</strong> contact@un.org</p>
+<p><strong>Feedback and Contact:</strong> contact@un.org</p>
 
-  <p>
-    <a href="https://www.un.org/en/about-us/terms-of-use">Terms</a> |
-    <a href="https://www.un.org/en/about-us/privacy-notice">Privacy</a> |
-    <a href="https://www.un.org/en/about-us/copyright">Copyright</a>
-  </p>
+<p>
+<a href="https://www.un.org/en/about-us/terms-of-use">Terms</a> |
+<a href="https://www.un.org/en/about-us/privacy-notice">Privacy</a> |
+<a href="https://www.un.org/en/about-us/copyright">Copyright</a>
+</p>
 
-  <p>Data from multiple sources. May vary in detail.</p>
+<p>Data compiled from multiple sources. Limitations apply.</p>
 
-  <p><a href="#top">Back to top</a></p>
+<p><a href="#">Back to top</a></p>
 </div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 
-// LOADING STATE
-document.body.style.opacity = 0.7;
-console.log("Loading data...");
+// LOADING
+console.log("Raw data loading");
 
-// DATA (SIMPLIFIED DEMO)
-const incidents = [
-  {name:"Flood Event", subtype:"Flood", duration:30, figure:504},
-  {name:"Tornado Event", subtype:"Storm", duration:0, figure:2},
-  {name:"Storm Event", subtype:"Storm", duration:23, figure:497}
+// SAMPLE DATA — replace later with JSON
+const data=[
+{name:"Flood Bloemhof",type:"Flood",dur:30,lat:-27.6,lon:25.6},
+{name:"Tornado Gauteng",type:"Storm",dur:0,lat:-25.7,lon:28.2},
+{name:"Storm Eastern Cape",type:"Storm",dur:23,lat:-32.5,lon:27.3}
 ];
 
-// LOG RAW DATA
-console.log("Raw", incidents);
+console.log("Cleaned dataset:", data);
 
-// CALCULATIONS
-const avg = incidents.reduce((a,b)=>a+b.duration,0)/incidents.length;
-const max = Math.max(...incidents.map(i=>i.duration));
-const min = Math.min(...incidents.map(i=>i.duration));
+// INIT MAP
+const map=L.map('map').setView([-30,25],5);
 
-document.getElementById("avg-duration").innerText = avg.toFixed(2) + " days";
-document.getElementById("max-duration").innerText = max + " days";
-document.getElementById("min-duration").innerText = min + " days";
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// KPI DETAIL PANEL
-document.getElementById("kpi-details").innerHTML = `
-<h4>Longest Incident</h4>
-<p>${incidents.find(i=>i.duration===max).name}</p>
-<h4>Shortest Incident</h4>
-<p>${incidents.find(i=>i.duration===min).name} (shared by multiple incidents)</p>
-`;
+// COLOR
+function color(t){
+if(t=="Flood")return "#009EDB";
+if(t=="Storm")return "#004987";
+return "#999";
+}
 
-// CHART
-const chart = document.getElementById("chart");
-const freq = {};
-incidents.forEach(i=>freq[i.subtype]=(freq[i.subtype]||0)+1);
-
-Object.entries(freq).forEach(([k,v])=>{
-  const div = document.createElement("div");
-  div.innerHTML = `<strong>${k}</strong>`;
-  chart.appendChild(div);
-
-  const bar = document.createElement("div");
-  bar.className="bar";
-  bar.style.width = (v*50)+"px";
-  chart.appendChild(bar);
+// MARKERS
+data.forEach(d=>{
+L.circleMarker([d.lat,d.lon],{
+radius:6,
+fillColor:color(d.type),
+color:"#fff",
+weight:1,
+fillOpacity:0.8
+})
+.addTo(map)
+.bindPopup(`<strong>${d.name}</strong><br>${d.type}`);
 });
 
-// TABLE
-const table = document.getElementById("data-table");
-table.innerHTML = `
-<tr><th>Name</th><th>Subtype</th><th>Duration</th></tr>
-` + incidents.map(i=>`
-<tr><td>${i.name}</td><td>${i.subtype}</td><td>${i.duration}</td></tr>
-`).join("");
+// KPIS
+const dur=data.map(d=>d.dur);
+const avg=dur.reduce((a,b)=>a+b,0)/dur.length;
+const max=Math.max(...dur);
+const min=Math.min(...dur);
 
-// LOADED
-document.body.style.opacity = 1;
-console.log("Dashboard ready");
+document.getElementById("avg").innerText=avg.toFixed(2)+" days";
+document.getElementById("max").innerText=max+" days";
+document.getElementById("min").innerText=min+" days";
+
+// DETAILS
+document.getElementById("details").innerHTML=
+`<p><strong>Longest:</strong> ${data.find(d=>d.dur===max).name}</p>
+<p><strong>Shortest:</strong> ${data.find(d=>d.dur===min).name} (multiple same-day incidents)</p>`;
+
+// CHART
+const freq={};
+data.forEach(d=>freq[d.type]=(freq[d.type]||0)+1);
+
+const chart=document.getElementById("chart");
+for(let k in freq){
+chart.innerHTML+=`<div>${k}</div><div class="bar" style="width:${freq[k]*50}px"></div>`;
+}
+
+// TABLE
+document.getElementById("table").innerHTML=
+"<tr><th>Name</th><th>Type</th><th>Duration</th></tr>"+
+data.map(d=>`<tr><td>${d.name}</td><td>${d.type}</td><td>${d.dur}</td></tr>`).join("");
+
+// STATES
+document.getElementById("loadingState").style.display="none";
+if(data.length==0){
+document.getElementById("emptyState").style.display="block";
+}
 
 </script>
+
 </body>
 </html>
