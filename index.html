@@ -3,287 +3,334 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OCHA Incident Dashboard</title>
 
-<!-- ROBOTO -->
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<title>OCHA Conflict Exposure Dashboard</title>
 
-<!-- CHART JS -->
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- LEAFLET -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-<!-- PAPAPARSE -->
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-
 <style>
-:root{
-  --primary:#009EDB;
-  --dark:#004987;
-  --bg:#f4f7fa;
-  --text:#222;
+:root {
+  --primary: #009EDB;
+  --dark: #004987;
+  --bg: #f5f7fa;
+  --text: #222;
+  --muted: #6b7280;
+  --danger: #c0392b;
+  --card: #ffffff;
 }
 
-body{
-  margin:0;
-  font-family:"Roboto",sans-serif;
-  background:var(--bg);
+body {
+  margin: 0;
+  font-family: "Roboto", sans-serif;
+  background: var(--bg);
+  color: var(--text);
 }
 
 /* HEADER */
-.header{
-  background:var(--primary);
-  color:white;
-  display:flex;
-  justify-content:space-between;
-  padding:12px 20px;
+header {
+  background: var(--primary);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
 }
 
-.header img{
-  height:38px;
+.logo {
+  display: flex;
+  align-items: center;
 }
 
-.header button{
-  background:white;
-  border:none;
-  padding:6px 10px;
-  cursor:pointer;
+.logo img {
+  height: 40px;
+}
+
+.controls {
+  text-align: right;
+}
+
+button {
+  background: var(--dark);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.banner {
+  font-size: 12px;
+  margin-top: 5px;
 }
 
 /* LAYOUT */
-.container{
-  max-width:1150px;
-  margin:auto;
-  padding:20px;
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
 }
 
-.dashboard{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
+h1 {
+  margin-bottom: 10px;
 }
 
-.section{
-  background:white;
-  padding:15px;
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
-/* KPI */
-.kpis{
-  display:flex;
-  gap:10px;
+@media(max-width: 768px){
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.kpi strong{
-  font-size:18px;
+/* CARDS */
+.card {
+  background: var(--card);
+  padding: 15px;
+}
+
+/* KPIs */
+.kpis {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.kpi {
+  flex: 1;
 }
 
 /* MAP */
-#map{
-  height:300px;
+#map {
+  height: 300px;
 }
 
-/* TABLE */
-table{width:100%;border-collapse:collapse;}
-td,th{font-size:12px;padding:6px;border-bottom:1px solid #ddd;}
+/* FOOTER */
+footer {
+  background: #1f2937;
+  color: white;
+  padding: 20px;
+  font-size: 12px;
+}
 
-#loading{text-align:center;}
-#empty{display:none;text-align:center;}
-
-@media(max-width:768px){
-  .dashboard{grid-template-columns:1fr;}
+/* States */
+.loading, .empty {
+  padding: 20px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <img src="OCHA Logo_beside_blue.png">
-  <div>
-    <button onclick="downloadData()">Download Dataset</button>
-    <div style="font-size:12px">For Internal Use Only</div>
+<header>
+  <div class="logo">
+    <img src="OCHA Logo_beside_blue (4).png" alt="OCHA Logo">
   </div>
-</div>
+
+  <div class="controls">
+    <button onclick="toggleDropdown()">Download Dataset</button>
+    <div id="dropdown" style="display:none;">
+      <a href="final_analysis_ready_security_incidents.json" download>Download JSON</a>
+    </div>
+    <div class="banner">For Internal Use Only</div>
+  </div>
+</header>
 
 <div class="container">
 
-<h2>Global IO Worker Incident Dashboard</h2>
+<h1>Conflict Exposure Dashboard</h1>
 
-<div id="loading">Loading data...</div>
-<div id="empty">No data available</div>
+<div id="loading" class="loading">Loading data...</div>
+<div id="empty" class="empty" style="display:none;">No data available.</div>
 
-<div class="dashboard">
+<div id="dashboard" style="display:none;">
 
-<!-- KPI -->
-<div class="section">
-<h3>Top Country KPIs</h3>
-<div class="kpis">
-<div class="kpi"><strong id="country"></strong><br>Country</div>
-<div class="kpi"><strong id="incidents"></strong><br>Incidents</div>
-<div class="kpi"><strong id="killed"></strong><br>Killed</div>
-<div class="kpi"><strong id="affected"></strong><br>Affected</div>
-</div>
-</div>
-
-<!-- MAP -->
-<div class="section">
-<h3>Risk Map</h3>
-<div id="map"></div>
+<!-- KPIs -->
+<div class="card">
+  <h3>Top Country KPIs</h3>
+  <div class="kpis">
+    <div class="kpi" id="kpiCountry"></div>
+    <div class="kpi" id="kpiIncidents"></div>
+    <div class="kpi" id="kpiCasualties"></div>
+  </div>
 </div>
 
-<!-- BAR -->
-<div class="section">
-<h3>Casualties by Country</h3>
-<canvas id="barChart"></canvas>
+<div class="grid">
+
+<!-- Bar -->
+<div class="card">
+  <h3>Casualties by Organization Type</h3>
+  <canvas id="barChart"></canvas>
 </div>
 
-<!-- PIE -->
-<div class="section">
-<h3>Motives</h3>
-<canvas id="pieChart"></canvas>
+<!-- Map -->
+<div class="card">
+  <h3>Areas of Risk</h3>
+  <div id="map"></div>
+</div>
+
+<!-- Pie -->
+<div class="card">
+  <h3>Motives</h3>
+  <canvas id="pieChart"></canvas>
 </div>
 
 </div>
 
-<!-- TABLE -->
-<div class="section">
-<h3>Data Table</h3>
-<table>
+<!-- Table -->
+<div class="card">
+<h3>Incident Data</h3>
+<table id="table" width="100%">
 <thead>
-<tr><th>Country</th><th>Motive</th><th>Affected</th></tr>
+<tr>
+<th>Year</th>
+<th>Org Type</th>
+<th>Killed</th>
+<th>Motive</th>
+</tr>
 </thead>
-<tbody id="tableBody"></tbody>
+<tbody></tbody>
 </table>
 </div>
 
 </div>
 
+</div>
+
+<footer>
+<p><strong>Feedback & Contact:</strong> contact@un.org</p>
+<p><strong>Legal:</strong>
+<a href="https://www.un.org/en/about-us/terms-of-use">Terms</a> |
+<a href="https://www.un.org/en/about-us/privacy-notice">Privacy</a> |
+<a href="https://www.un.org/en/about-us/copyright">Copyright</a>
+</p>
+<p>Data used for internal analysis; may contain limitations.</p>
+</footer>
+
+
 <script>
-let rawData=[];
-let map;
+let rawData = [];
 
-/* LOAD CSV */
-fetch("global-security-incidents.csv")
-.then(res=>res.text())
-.then(text=>{
+fetch('final_analysis_ready_security_incidents.json')
+.then(res => res.json())
+.then(data => {
+  console.log("RAW:", data);
+  rawData = data;
+  initDashboard();
+})
+.catch(() => showEmpty());
 
-Papa.parse(text,{
-  header:true,
-  skipEmptyLines:true,
-  complete:function(results){
+function initDashboard(){
+  if(!rawData.length) return showEmpty();
 
-    console.log("RAW:",results.data);
+  document.getElementById("loading").style.display="none";
+  document.getElementById("dashboard").style.display="block";
 
-    rawData=results.data.map(d=>({
-      country:d.Country,
-      lat:parseFloat(d.Latitude),
-      lon:parseFloat(d.Longitude),
-      motive:d["Motive"],
-      affected:+d["Total affected"]||0,
-      killed:+d["Total killed"]||0
-    }));
+  const distinctIncidents = [...new Set(rawData.map(d=>d.incident_id))];
+  const totalCasualties = rawData.reduce((s,d)=>s+d.casualties.total,0);
 
-    console.log("CLEANED:",rawData);
+  const country = "Top Affected Area";
 
-    init();
-  }
-});
+  document.getElementById("kpiCountry").innerHTML = `<b>${country}</b>`;
+  document.getElementById("kpiIncidents").innerHTML = `<b>${distinctIncidents.length}</b> Incidents`;
+  document.getElementById("kpiCasualties").innerHTML = `<b>${totalCasualties}</b> Casualties`;
 
-});
+  drawBar();
+  drawPie();
+  drawMap();
+  drawTable();
+}
 
-/* INIT DASHBOARD */
-function init(){
+function drawBar(){
+  const grouped = {};
+  rawData.forEach(d=>{
+    let org = d.organization_type;
+    if(!grouped[org]) grouped[org]=0;
+    grouped[org]+=d.casualties.total;
+  });
 
-document.getElementById("loading").style.display="none";
+  new Chart(document.getElementById("barChart"), {
+    type:'bar',
+    data:{
+      labels:Object.keys(grouped),
+      datasets:[{
+        data:Object.values(grouped),
+        backgroundColor:'#004987'
+      }]
+    }
+  });
+}
 
-if(!rawData.length){
+function drawPie(){
+  const map = {};
+
+  const distinct = {};
+  rawData.forEach(d=>{
+    distinct[d.incident_id]=d.motive;
+  });
+
+  Object.values(distinct).forEach(m=>{
+    map[m]=(map[m]||0)+1;
+  });
+
+  new Chart(document.getElementById("pieChart"), {
+    type:'pie',
+    data:{
+      labels:Object.keys(map),
+      datasets:[{
+        data:Object.values(map)
+      }]
+    }
+  });
+}
+
+function drawMap(){
+  const map = L.map('map').setView([20,0],2);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+  rawData.forEach(d=>{
+    L.circleMarker([d.lat,d.lon],{
+      radius:3
+    }).addTo(map);
+  });
+}
+
+function drawTable(){
+  const tbody = document.querySelector("#table tbody");
+
+  rawData.slice(0,50).forEach(d=>{
+    let row = `<tr>
+      <td>${d.year}</td>
+      <td>${d.organization_type}</td>
+      <td>${d.casualties.killed}</td>
+      <td>${d.motive}</td>
+    </tr>`;
+    tbody.innerHTML += row;
+  });
+}
+
+function showEmpty(){
+  document.getElementById("loading").style.display="none";
   document.getElementById("empty").style.display="block";
-  return;
 }
 
-/* KPI */
-let grouped={};
-rawData.forEach(d=>{
-  grouped[d.country]=(grouped[d.country]||0)+d.affected;
-});
-
-let top=Object.entries(grouped).sort((a,b)=>b[1]-a[1])[0];
-
-document.getElementById("country").innerText=top[0];
-document.getElementById("affected").innerText=top[1];
-document.getElementById("incidents").innerText=rawData.length;
-document.getElementById("killed").innerText=
-rawData.reduce((a,b)=>a+b.killed,0);
-
-/* MAP */
-map=L.map("map").setView([10,0],2);
-
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
-
-rawData.forEach(d=>{
-if(d.lat && d.lon){
-L.circle([d.lat,d.lon],{
-radius:20000,
-color:"#c0392b"
-}).addTo(map);
-}
-});
-
-/* BAR */
-let barData={};
-rawData.forEach(d=>{
-  barData[d.country]=(barData[d.country]||0)+d.killed;
-});
-
-new Chart(document.getElementById("barChart"),{
-type:"bar",
-data:{
-labels:Object.keys(barData).slice(0,10),
-datasets:[{
-data:Object.values(barData).slice(0,10),
-backgroundColor:"#004987"
-}]
-}
-});
-
-/* PIE */
-let pieData={};
-rawData.forEach(d=>{
-  pieData[d.motive]=(pieData[d.motive]||0)+1;
-});
-
-new Chart(document.getElementById("pieChart"),{
-type:"pie",
-data:{
-labels:Object.keys(pieData).slice(0,5),
-datasets:[{
-data:Object.values(pieData).slice(0,5)
-}]
-}
-});
-
-/* TABLE */
-let table=document.getElementById("tableBody");
-
-rawData.slice(0,25).forEach(d=>{
-table.innerHTML+=`<tr>
-<td>${d.country}</td>
-<td>${d.motive}</td>
-<td>${d.affected}</td>
-</tr>`;
-});
-
-}
-
-/* DOWNLOAD */
-function downloadData(){
-window.open("global-security-incidents.csv");
+function toggleDropdown(){
+  const dd = document.getElementById("dropdown");
+  dd.style.display = dd.style.display === "none" ? "block" : "none";
 }
 </script>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 </body>
 </html>
