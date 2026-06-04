@@ -3,311 +3,314 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OCHA Conflict Exposure Dashboard</title>
+<title>OCHA Displacement Dashboard</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<!-- Font -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
 <style>
 :root {
-  --primary:#009EDB;
-  --dark:#004987;
-  --bg:#f5f7fa;
-  --text:#1f2937;
-  --card:#ffffff;
+  --primary: #009EDB;
+  --dark-blue: #004987;
+  --bg: #f4f7fb;
+  --text: #1a1a1a;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent-red: #c43c3c;
 }
 
-body {margin:0;font-family:Roboto;background:var(--bg);color:var(--text);}
-
-header {
-  background:var(--primary);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px 20px;
-  color:white;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.logo img {
-  height: 56px;
+body {
+  font-family: 'Roboto', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
 }
 
-.container {max-width:1200px;margin:auto;padding:20px;}
-
-h1 {margin-bottom:10px;}
-
-.grid-2x2 {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
+/* HEADER */
+.global-header {
+  background: var(--primary);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 24px;
 }
 
-@media(max-width:768px){
-  .grid-2x2 {grid-template-columns:1fr;}
+.logo {
+  height: 40px;
 }
 
-.card {
-  background:var(--card);
-  padding:16px;
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
-.kpis {display:flex;gap:20px;}
-
-#map {height:300px;}
-
-button {
-  background:var(--dark);
-  color:white;
-  border:none;
-  padding:8px 12px;
-  cursor:pointer;
+.download-btn {
+  background: white;
+  color: var(--primary);
+  padding: 6px 12px;
+  border: none;
+  cursor: pointer;
 }
 
-footer {
-  background:#1f2937;
-  color:white;
-  padding:20px;
-  font-size:12px;
+.internal-banner {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+/* PAGE HEADER */
+.page-header {
+  padding: 24px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.page-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* LAYOUT */
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 16px;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.right-panel {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 16px;
+}
+
+.section {
+  background: white;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+/* KPI CARDS */
+.kpis {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.kpi {
+  flex: 1;
+  min-width: 120px;
+}
+
+.kpi h3 {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.kpi p {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+/* CHART */
+.bar {
+  height: 20px;
+  background: var(--primary);
+  margin-bottom: 6px;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th, td {
+  border-bottom: 1px solid var(--border);
+  padding: 6px;
+  text-align: left;
+}
+
+/* FOOTER */
+.footer {
+  margin-top: 40px;
+  background: #1d2630;
+  color: #ccc;
+  padding: 20px;
+  font-size: 12px;
+}
+
+.footer a {
+  color: #ccc;
+}
+
+/* RESPONSIVE */
+@media(max-width: 768px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <div class="logo">
-    <img src="assets/ocha-logo.png" alt="OCHA Logo">
+<!-- HEADER -->
+<div class="global-header">
+  <img src="OCHA Logo_beside_blue.png" class="logo">
+  <div class="header-right">
+    <select class="download-btn">
+      <option>Download Dataset</option>
+      <option>Repository JSON</option>
+    </select>
+    <div class="internal-banner">For Internal Use Only</div>
   </div>
+</div>
 
-  <div>
-    <button onclick="toggleDropdown()">Download Dataset</button>
-    <div id="dropdown" style="display:none;">
-      <a href="final_analysis_ready_security_incidents.json" download>Download JSON</a>
-    </div>
-    <div style="font-size:12px;">For Internal Use Only</div>
-  </div>
-</header>
+<div class="page-header">
+  <h1>Displacement from Natural Hazard Events — South Africa</h1>
+</div>
 
 <div class="container">
 
-<h1>Conflict Exposure Dashboard</h1>
-
-<label>Filter by Year:</label>
-<select id="yearFilter"></select>
-
-<div id="loading">Loading data...</div>
-<div id="empty" style="display:none;">No data available.</div>
-
-<div id="dashboard" style="display:none;">
-
-<div class="grid-2x2">
-
-<!-- KPI -->
-<div class="card">
-<h3>Top Country KPIs</h3>
-<div class="kpis">
-<div id="kpiCountry"></div>
-<div id="kpiIncidents"></div>
-<div id="kpiCasualties"></div>
-</div>
-</div>
+<div class="dashboard">
 
 <!-- MAP -->
-<div class="card">
-<h3>Areas of Risk</h3>
-<div id="map"></div>
+<div class="section">
+  <h2>Impacted Locations Map</h2>
+  <div id="map">Map Loading...</div>
 </div>
 
-<!-- BAR -->
-<div class="card">
-<h3>Casualties by Organization</h3>
-<canvas id="barChart"></canvas>
+<div class="right-panel">
+
+<!-- CHART -->
+<div class="section">
+  <h2>Disaster Frequency</h2>
+  <div id="chart"></div>
 </div>
 
-<!-- PIE -->
-<div class="card">
-<h3>Motives</h3>
-<canvas id="pieChart"></canvas>
-</div>
+<!-- KPI PANEL -->
+<div class="section">
+  <h2>Duration KPIs</h2>
 
+  <div class="kpis">
+    <div class="kpi">
+      <h3>Average Duration</h3>
+      <p id="avg-duration">-</p>
+    </div>
+    <div class="kpi">
+      <h3>Max Duration</h3>
+      <p id="max-duration">-</p>
+    </div>
+    <div class="kpi">
+      <h3>Min Duration</h3>
+      <p id="min-duration">-</p>
+    </div>
+  </div>
+
+  <div id="kpi-details"></div>
+
+</div>
+</div>
 </div>
 
 <!-- TABLE -->
-<div class="card">
-<h3>Incident Table</h3>
-<table width="100%">
-<thead>
-<tr>
-<th>Year</th>
-<th>Org</th>
-<th>Killed</th>
-<th>Motive</th>
-</tr>
-</thead>
-<tbody id="tableBody"></tbody>
-</table>
+<div class="section">
+  <h2>Incident Table</h2>
+  <table id="data-table"></table>
 </div>
 
 </div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p><strong>Feedback:</strong> contact@un.org</p>
+
+  <p>
+    <a href="https://www.un.org/en/about-us/terms-of-use">Terms</a> |
+    <a href="https://www.un.org/en/about-us/privacy-notice">Privacy</a> |
+    <a href="https://www.un.org/en/about-us/copyright">Copyright</a>
+  </p>
+
+  <p>Data from multiple sources. May vary in detail.</p>
+
+  <p><a href="#top">Back to top</a></p>
 </div>
-
-<footer>
-<p><strong>Contact:</strong> <span id="contactEmail"></span></p>
-
-<p>
-<a href="https://www.un.org/en/about-us/terms-of-use">Terms</a> |
-<a href="https://www.un.org/en/about-us/privacy-notice">Privacy</a> |
-<a href="https://www.un.org/en/about-us/copyright">Copyright</a>
-</p>
-
-<p>Data derived from multiple sources; limitations may apply.</p>
-</footer>
 
 <script>
 
-const CONTACT_EMAIL = "james.brennan@un.org"; // ✅ CHANGE HERE
+// LOADING STATE
+document.body.style.opacity = 0.7;
+console.log("Loading data...");
 
-document.getElementById("contactEmail").textContent = CONTACT_EMAIL;
+// DATA (SIMPLIFIED DEMO)
+const incidents = [
+  {name:"Flood Event", subtype:"Flood", duration:30, figure:504},
+  {name:"Tornado Event", subtype:"Storm", duration:0, figure:2},
+  {name:"Storm Event", subtype:"Storm", duration:23, figure:497}
+];
 
-let rawData=[], barChart, pieChart, map;
+// LOG RAW DATA
+console.log("Raw", incidents);
 
-fetch('final_analysis_ready_security_incidents.json')
-.then(r=>r.json())
-.then(data=>{
- console.log("RAW:", data);
- rawData=data;
- init();
-})
-.catch(()=>showEmpty());
+// CALCULATIONS
+const avg = incidents.reduce((a,b)=>a+b.duration,0)/incidents.length;
+const max = Math.max(...incidents.map(i=>i.duration));
+const min = Math.min(...incidents.map(i=>i.duration));
 
-function init(){
- document.getElementById("loading").style.display="none";
- populateYearFilter();
- updateDashboard();
-}
+document.getElementById("avg-duration").innerText = avg.toFixed(2) + " days";
+document.getElementById("max-duration").innerText = max + " days";
+document.getElementById("min-duration").innerText = min + " days";
 
-function populateYearFilter(){
- const years=[...new Set(rawData.map(d=>d.year))].sort((a,b)=>a-b);
- const select=document.getElementById("yearFilter");
- select.innerHTML='<option value="all">All</option>';
- years.forEach(y=>{
-   const opt=document.createElement("option");
-   opt.value=y;
-   opt.textContent=y;
-   select.appendChild(opt);
- });
- select.onchange=updateDashboard;
-}
+// KPI DETAIL PANEL
+document.getElementById("kpi-details").innerHTML = `
+<h4>Longest Incident</h4>
+<p>${incidents.find(i=>i.duration===max).name}</p>
+<h4>Shortest Incident</h4>
+<p>${incidents.find(i=>i.duration===min).name} (shared by multiple incidents)</p>
+`;
 
-function getFiltered(){
- const year=document.getElementById("yearFilter").value;
- return year==="all" ? rawData : rawData.filter(d=>d.year==year);
-}
+// CHART
+const chart = document.getElementById("chart");
+const freq = {};
+incidents.forEach(i=>freq[i.subtype]=(freq[i.subtype]||0)+1);
 
-function updateDashboard(){
- const data=getFiltered();
- console.log("FILTERED:", data);
+Object.entries(freq).forEach(([k,v])=>{
+  const div = document.createElement("div");
+  div.innerHTML = `<strong>${k}</strong>`;
+  chart.appendChild(div);
 
- if(!data.length){showEmpty();return;}
- document.getElementById("dashboard").style.display="block";
+  const bar = document.createElement("div");
+  bar.className="bar";
+  bar.style.width = (v*50)+"px";
+  chart.appendChild(bar);
+});
 
- updateKPIs(data);
- drawBar(data);
- drawPie(data);
- drawMap(data);
- drawTable(data);
-}
+// TABLE
+const table = document.getElementById("data-table");
+table.innerHTML = `
+<tr><th>Name</th><th>Subtype</th><th>Duration</th></tr>
+` + incidents.map(i=>`
+<tr><td>${i.name}</td><td>${i.subtype}</td><td>${i.duration}</td></tr>
+`).join("");
 
-function updateKPIs(data){
- const incidents=[...new Set(data.map(d=>d.incident_id))].length;
- const casualties=data.reduce((s,d)=>s+d.casualties.total,0);
-
- document.getElementById("kpiCountry").innerHTML="<b>Top Area</b>";
- document.getElementById("kpiIncidents").innerHTML=`${incidents} Incidents`;
- document.getElementById("kpiCasualties").innerHTML=`${casualties} Casualties`;
-}
-
-function drawBar(data){
- if(barChart) barChart.destroy();
-
- const grouped={};
- data.forEach(d=>{
-   grouped[d.organization_type]=(grouped[d.organization_type]||0)+d.casualties.total;
- });
-
- barChart=new Chart(barChart=document.getElementById("barChart"),{
-  type:'bar',
-  data:{
-   labels:Object.keys(grouped),
-   datasets:[{
-     label:'Casualties',
-     data:Object.values(grouped),
-     backgroundColor:'#004987'
-   }]
-  }
- });
-}
-
-function drawPie(data){
- if(pieChart) pieChart.destroy();
-
- const distinct={};
- data.forEach(d=>distinct[d.incident_id]=d.motive);
-
- const counts={};
- Object.values(distinct).forEach(m=>counts[m]=(counts[m]||0)+1);
-
- pieChart=new Chart(document.getElementById("pieChart"),{
-  type:'pie',
-  data:{
-    labels:Object.keys(counts),
-    datasets:[{data:Object.values(counts)}]
-  }
- });
-}
-
-function drawMap(data){
- if(map) map.remove();
-
- map=L.map('map').setView([20,0],2);
-
- L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
- .addTo(map);
-
- data.forEach(d=>{
-   L.circleMarker([d.lat,d.lon],{radius:3}).addTo(map);
- });
-}
-
-function drawTable(data){
- const tbody=document.getElementById("tableBody");
- tbody.innerHTML="";
- const sorted=[...data].sort((a,b)=>b.year-a.year);
-
- sorted.slice(0,50).forEach(d=>{
-   tbody.innerHTML+=`
-   <tr>
-     <td>${d.year}</td>
-     <td>${d.organization_type}</td>
-     <td>${d.casualties.killed}</td>
-     <td>${d.motive}</td>
-   </tr>`;
- });
-}
-
-function showEmpty(){
- document.getElementById("loading").style.display="none";
- document.getElementById("empty").style.display="block";
-}
-
-function toggleDropdown(){
- const d=document.getElementById("dropdown");
- d.style.display=d.style.display==="none"?"block":"none";
-}
+// LOADED
+document.body.style.opacity = 1;
+console.log("Dashboard ready");
 
 </script>
-
 </body>
 </html>
