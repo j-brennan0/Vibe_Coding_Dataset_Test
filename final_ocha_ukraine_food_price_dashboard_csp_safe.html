@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en" id="top">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="OCHA-style Ukraine food cost pressure dashboard for internal humanitarian reporting." />
+  <title>Ukraine Food Cost Pressure Dashboard | OCHA</title>
+  <style>
+    :root {
+      --ocha-blue: #009EDB;
+      --ocha-dark-blue: #004987;
+      --ocha-blue-soft: #E6F5FB;
+      --ocha-bg: #F5F7FA;
+      --ocha-surface: #FFFFFF;
+      --ocha-surface-muted: #F0F4F7;
+      --ocha-border: #D9E2EA;
+      --ocha-text: #1F2933;
+      --ocha-text-muted: #5F6B76;
+      --ocha-footer: #26323F;
+      --ocha-footer-link: #DCE8F2;
+      --ocha-alert: #C94747;
+      --font-body: Roboto, Arial, sans-serif;
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.5rem;
+      --space-6: 2rem;
+      --space-7: 3rem;
+      --radius: 3px;
+      --container-max: 1180px;
+      --transition: 150ms ease-in-out;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font-body);
+      line-height: 1.45;
+      color: var(--ocha-text);
+      background: var(--ocha-bg);
+    }
+    a { color: var(--ocha-dark-blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    a:focus, button:focus, select:focus {
+      outline: 3px solid rgba(0, 158, 219, 0.35);
+      outline-offset: 2px;
+    }
+    .container { max-width: var(--container-max); margin: 0 auto; padding: 0 var(--space-5); }
+    .global-header { background: var(--ocha-blue); color: #fff; border-bottom: 1px solid rgba(0,0,0,0.08); }
+    .global-header__inner { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+    .brand { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+    .brand__logo { display: block; height: 40px; width: auto; max-width: 150px; background: #fff; padding: 4px 7px; border-radius: var(--radius); }
+    .brand__title { margin: 0; font-size: 1rem; font-weight: 500; letter-spacing: .01em; white-space: nowrap; }
+    .header-tools { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-1); position: relative; }
+    .button { border: 1px solid transparent; border-radius: var(--radius); padding: .55rem .85rem; font-family: var(--font-body); font-size: .86rem; font-weight: 500; cursor: pointer; transition: background var(--transition), color var(--transition), border-color var(--transition); }
+    .button--primary { background: var(--ocha-dark-blue); color: #fff; }
+    .button--primary:hover { background: #003A6F; }
+    .button--outline { background: transparent; color: var(--ocha-dark-blue); border-color: var(--ocha-dark-blue); }
+    .button--outline:hover { background: var(--ocha-blue-soft); }
+    .download-menu { display: none; position: absolute; top: 42px; right: 0; z-index: 30; min-width: 270px; background: var(--ocha-surface); color: var(--ocha-text); border: 1px solid var(--ocha-border); border-radius: var(--radius); padding: var(--space-2); }
+    .download-menu.is-open { display: block; }
+    .download-menu a { display: block; padding: var(--space-2) var(--space-3); color: var(--ocha-text); font-size: .85rem; }
+    .download-menu a:hover { background: var(--ocha-blue-soft); text-decoration: none; }
+    .internal-banner { font-size: .72rem; line-height: 1; color: #fff; opacity: .95; }
+    .page-header { padding: var(--space-6) 0 var(--space-5); background: var(--ocha-surface); border-bottom: 1px solid var(--ocha-border); }
+    .page-header h2 { margin: 0 0 var(--space-2); color: var(--ocha-dark-blue); font-size: clamp(1.45rem, 2.5vw, 2.1rem); line-height: 1.15; font-weight: 700; }
+    .page-header p { max-width: 820px; margin: 0; color: var(--ocha-text-muted); font-size: .96rem; }
+    .links-inline { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); font-size: .85rem; color: var(--ocha-text-muted); }
+    .links-inline span::after { content: "|"; margin-left: var(--space-2); color: var(--ocha-border); }
+    .links-inline span:last-child::after { content: ""; margin: 0; }
+    main { padding: var(--space-6) 0; }
+    .filters { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-4); padding: var(--space-4); margin-bottom: var(--space-5); background: var(--ocha-surface); border: 1px solid var(--ocha-border); border-radius: var(--radius); }
+    .field { display: flex; flex-direction: column; gap: var(--space-1); }
+    .field label { color: var(--ocha-dark-blue); font-size: .76rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    select { min-width: 180px; padding: .5rem .65rem; border: 1px solid var(--ocha-border); border-radius: var(--radius); background: #fff; color: var(--ocha-text); font-family: var(--font-body); font-size: .9rem; }
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); }
+    .panel { min-height: 320px; padding: var(--space-5); background: var(--ocha-surface); border: 1px solid var(--ocha-border); border-radius: var(--radius); }
+    .panel__header { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--ocha-border); }
+    .panel h3 { margin: 0; color: var(--ocha-dark-blue); font-size: .94rem; font-weight: 700; letter-spacing: .01em; }
+    .panel__note { color: var(--ocha-text-muted); font-size: .78rem; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+    .kpi-card { min-height: 92px; padding: var(--space-4); background: var(--ocha-surface-muted); border-left: 4px solid var(--ocha-blue); }
+    .kpi-card--alert { border-left-color: var(--ocha-alert); }
+    .kpi-card__label { margin: 0 0 var(--space-1); color: var(--ocha-text-muted); font-size: .74rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    .kpi-card__value { margin: 0; color: var(--ocha-dark-blue); font-size: 1.35rem; font-weight: 700; }
+    .kpi-card__meta { margin-top: var(--space-1); color: var(--ocha-text-muted); font-size: .75rem; }
+    .chart-area { width: 100%; min-height: 245px; display: flex; align-items: center; justify-content: center; color: var(--ocha-text-muted); font-size: .9rem; }
+    .chart-list { width: 100%; display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+    .chart-list li { display: grid; grid-template-columns: 1fr auto; gap: var(--space-3); align-items: center; padding-bottom: var(--space-2); border-bottom: 1px solid var(--ocha-border); font-size: .85rem; }
+    .bar { height: 8px; margin-top: 4px; background: var(--ocha-blue-soft); }
+    .bar span { display: block; height: 8px; background: var(--ocha-blue); }
+    svg { width: 100%; max-width: 100%; height: auto; }
+    .map-placeholder { width: 100%; min-height: 235px; display: grid; gap: var(--space-4); place-items: center; padding: var(--space-5); text-align: center; color: var(--ocha-dark-blue); background: var(--ocha-blue-soft); border: 1px dashed var(--ocha-border); }
+    .summary-box { width: 100%; padding: var(--space-3); background: rgba(255,255,255,.75); border: 1px solid var(--ocha-border); text-align: left; font-size: .84rem; color: var(--ocha-text); }
+    .status-message, .empty-state { margin: var(--space-4) 0; padding: var(--space-3) var(--space-4); border-left: 4px solid var(--ocha-alert); background: #FFF7F7; color: #732222; font-size: .9rem; }
+    .empty-state { border-left-color: var(--ocha-dark-blue); background: #F2F7FB; color: var(--ocha-dark-blue); }
+    .status-message[hidden], .empty-state[hidden], .loading-message[hidden], .debug-panel[hidden] { display: none; }
+    .loading-message { margin: var(--space-4) 0; color: var(--ocha-text-muted); font-size: .9rem; }
+    .data-table-wrap { overflow-x: auto; margin-top: var(--space-5); background: var(--ocha-surface); border: 1px solid var(--ocha-border); border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    caption { padding: var(--space-3); color: var(--ocha-dark-blue); font-weight: 700; text-align: left; }
+    th, td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--ocha-border); text-align: left; white-space: nowrap; }
+    th { background: var(--ocha-surface-muted); color: var(--ocha-dark-blue); font-weight: 700; }
+    .debug-panel { margin: var(--space-6) 0; padding: var(--space-4); background: #111827; color: #E5E7EB; border-radius: var(--radius); font-size: .78rem; }
+    .debug-panel h3 { margin: 0 0 var(--space-3); color: #fff; font-size: .9rem; }
+    .debug-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-4); }
+    .debug-panel pre { max-height: 240px; margin: 0; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+    .site-footer { margin-top: var(--space-7); padding: var(--space-6) 0; background: var(--ocha-footer); color: #D1D9E0; }
+    .footer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-5); font-size: .82rem; }
+    .footer-section h4 { margin: 0 0 var(--space-2); color: #fff; font-size: .85rem; }
+    .footer-section p { margin: 0 0 var(--space-2); }
+    .site-footer a { color: var(--ocha-footer-link); text-decoration: none; }
+    .site-footer a:hover { text-decoration: underline; }
+    .social-links { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-2) 0 var(--space-3); }
+    .social-links a { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,.35); border-radius: 50%; font-size: .78rem; transition: background var(--transition), color var(--transition); }
+    .social-links a:hover { background: #fff; color: var(--ocha-footer); text-decoration: none; }
+    @media (max-width: 900px) {
+      .dashboard-grid, .footer-grid, .debug-grid { grid-template-columns: 1fr; }
+      .global-header__inner { align-items: flex-start; flex-direction: column; padding: var(--space-3) 0; }
+      .header-tools { align-items: flex-start; }
+      .download-menu { left: 0; right: auto; }
+    }
+    @media (max-width: 560px) {
+      .container { padding: 0 var(--space-4); }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .brand__title { white-space: normal; }
+      .panel { padding: var(--space-4); }
+    }
+  </style>
+</head>
+<body>
+  <header class="global-header" role="banner">
+    <div class="container global-header__inner">
+      <div class="brand">
+        <img class="brand__logo" src="OCHA-Logo.png" alt="OCHA logo" />
+        <h1 class="brand__title">Ukraine Food Price Monitoring</h1>
+      </div>
+      <div class="header-tools">
+        <button class="button button--primary" id="downloadButton" type="button" aria-expanded="false" aria-controls="downloadMenu">Download dataset</button>
+        <nav class="download-menu" id="downloadMenu" aria-label="Dataset downloads"></nav>
+        <div class="internal-banner">For Internal Use Only</div>
+      </div>
+    </div>
+  </header>
+
+  <section class="page-header" aria-labelledby="page-title">
+    <div class="container">
+      <h2 id="page-title">Food cost pressure dashboard</h2>
+      <p>A restrained internal reporting dashboard for monitoring food price pressure in Ukraine. Indicators are derived from a cleaned price metric and should be interpreted as food-cost pressure signals rather than direct hunger measurements.</p>
+      <div class="links-inline" aria-label="Supporting links">
+        <span><a href="#dashboard">Dashboard</a></span><span><a href="#dataTable">Data table</a></span><span><a href="#debugPanel">Debug</a></span>
+      </div>
+    </div>
+  </section>
+
+  <main id="dashboard" class="container" tabindex="-1">
+    <section class="filters" aria-label="Dashboard filters">
+      <div class="field"><label for="commodityFilter">Commodity</label><select id="commodityFilter"></select></div>
+      <div class="field"><label for="periodFilter">Period</label><select id="periodFilter"><option value="all">All periods</option><option value="pre">Pre-invasion period</option><option value="post">Post-invasion period</option></select></div>
+      <div class="field"><label for="yearFilter">Year</label><select id="yearFilter"></select></div>
+      <button class="button button--outline" id="resetFilters" type="button">Reset filters</button>
+    </section>
+
+    <div id="loadingMessage" class="loading-message">Loading dashboard data…</div>
+    <div id="errorMessage" class="status-message" role="alert" hidden></div>
+    <div id="emptyState" class="empty-state" role="status" hidden>No rows match the selected filters. Reset filters or choose a broader selection.</div>
+
+    <section class="dashboard-grid" aria-label="Dashboard panels">
+      <article class="panel" aria-labelledby="kpi-title"><div class="panel__header"><h3 id="kpi-title">Key indicators</h3><span class="panel__note">Filtered dataset</span></div><div class="kpi-grid" id="kpiContainer"></div></article>
+      <article class="panel" aria-labelledby="pie-title"><div class="panel__header"><h3 id="pie-title">Cost composition</h3><span class="panel__note">Latest filtered month</span></div><div class="chart-area" id="pieChart" role="img" aria-label="Cost composition chart">No chart data yet.</div></article>
+      <article class="panel" aria-labelledby="line-title"><div class="panel__header"><h3 id="line-title">Price trend</h3><span class="panel__note">Cleaned price metric</span></div><div class="chart-area" id="lineChart" role="img" aria-label="Price trend chart">No chart data yet.</div></article>
+      <article class="panel" aria-labelledby="map-title"><div class="panel__header"><h3 id="map-title">Geographic overview</h3><span class="panel__note">Country and region-ready</span></div><div class="map-placeholder" id="mapContainer"><div id="topCountrySummary" class="summary-box">Waiting for data…</div></div></article>
+    </section>
+
+    <section class="data-table-wrap" aria-labelledby="table-title"><table id="dataTable"><caption id="table-title">Filtered dataset preview</caption><thead></thead><tbody></tbody></table></section>
+
+    <section class="debug-panel" id="debugPanel" aria-labelledby="debug-title"><h3 id="debug-title">Debug panel</h3><div class="debug-grid"><div><strong>Active filters</strong><pre id="debugFilters">{}</pre></div><div><strong>Key calculated values</strong><pre id="debugMetrics">{}</pre></div><div><strong>FilteredData</strong><pre id="debugData">[]</pre></div></div></section>
+  </main>
+
+  <footer class="site-footer" id="footer"><div class="container footer-grid"><section class="footer-section" aria-labelledby="feedback-title"><h4 id="feedback-title">Feedback &amp; Contact</h4><p>Report issues, ask questions, or request support.</p><a href="mailto:james.brennan@un.org">james.brennan@un.org</a></section><section class="footer-section" aria-labelledby="legal-title"><h4 id="legal-title">Legal</h4><p><a href="https://www.un.org/en/about-us/terms-of-use">Terms of Use</a></p><p><a href="https://www.un.org/en/about-us/privacy-notice">Privacy Policy</a></p><p><a href="https://www.un.org/en/about-us/copyright">Copyright &amp; Licensing</a></p><p>Data may be used, reused, or shared with appropriate attribution and awareness of source limitations.</p></section><section class="footer-section" aria-labelledby="data-title"><h4 id="data-title">Data &amp; Attribution</h4><p>Data may come from multiple sources and may have limitations or varying levels of geographic detail.</p><p><a href="#dashboard">Dashboard documentation</a></p></section><section class="footer-section" aria-labelledby="connect-title"><h4 id="connect-title">Connect</h4><div class="social-links" aria-label="Social media links"><a href="https://twitter.com/UNOCHA" aria-label="OCHA on X">X</a><a href="https://www.linkedin.com/company/un-ocha" aria-label="OCHA on LinkedIn">in</a><a href="https://www.facebook.com/UNOCHA" aria-label="OCHA on Facebook">f</a><a href="https://www.youtube.com/user/OCHAFilms" aria-label="OCHA on YouTube">▶</a></div><p><a href="#top">Back to top</a></p></section></div></footer>
+
+  <script>
+    const DEBUG = true;
+
+    let RawData = [];
+    let CleanedData = [];
+    let FilteredData = [];
+    let ActiveFilters = { commodity: "all", period: "all", year: "all" };
+    let CalculatedValues = {};
+
+    const RequiredDOMIds = ["downloadButton", "downloadMenu", "commodityFilter", "periodFilter", "yearFilter", "resetFilters", "kpiContainer", "pieChart", "lineChart", "mapContainer", "topCountrySummary", "errorMessage", "emptyState", "loadingMessage", "dataTable", "debugPanel", "debugFilters", "debugMetrics", "debugData"];
+    const RequiredFields = ["date", "year", "month", "period", "commodity", "price"];
+    const DatasetRegistry = [{ label: "Refined Ukraine food prices dataset", href: "refined_food_prices_ukr.json", type: "JSON" }];
+    const FallbackData = [
+      { date: "2021-12-15T00:00:00.000", year: 2021, month: 12, period: "pre", commodity: "Bread (rye)", price: 18.2, usdprice: 0.67, yoy_change: 0.08, price_ratio: 1.0, admin1: "National" },
+      { date: "2022-12-15T00:00:00.000", year: 2022, month: 12, period: "post", commodity: "Bread (rye)", price: 27.8, usdprice: 0.76, yoy_change: 0.53, price_ratio: 1.53, admin1: "National" },
+      { date: "2021-12-15T00:00:00.000", year: 2021, month: 12, period: "pre", commodity: "Milk", price: 29.1, usdprice: 1.07, yoy_change: 0.11, price_ratio: 1.0, admin1: "National" },
+      { date: "2022-12-15T00:00:00.000", year: 2022, month: 12, period: "post", commodity: "Milk", price: 38.4, usdprice: 1.05, yoy_change: 0.32, price_ratio: 1.32, admin1: "National" }
+    ];
+
+    function LoadData() {
+      return fetch("refined_food_prices_ukr.json")
+        .then(function(response) {
+          if (!response.ok) { throw new Error("Dataset request failed"); }
+          return response.json();
+        })
+        .then(function(data) {
+          console.log("Raw data response", data);
+          return data;
+        })
+        .catch(function(error) {
+          console.warn("Dataset load failed", error);
+          ShowError("Dataset could not be loaded from refined_food_prices_ukr.json. Displaying built-in fallback data so the dashboard remains usable.");
+          console.log("Raw data response", FallbackData);
+          return FallbackData;
+        });
+    }
+
+    function ValidateData(data) {
+      HideError();
+      if (!VerifyDOMElements()) { return false; }
+      if (!Array.isArray(data) || data.length === 0) {
+        ShowError("The dataset is empty or unavailable. Please check that refined_food_prices_ukr.json exists in the same folder as this HTML file.");
+        return false;
+      }
+      const missing = RequiredFields.filter(function(field) { return !(field in data[0]); });
+      if (missing.length > 0) {
+        ShowError("The dataset is missing required fields: " + missing.join(", ") + ".");
+        return false;
+      }
+      return true;
+    }
+
+    function ApplyFilters() {
+      FilteredData = CleanedData.filter(function(row) {
+        const commodityMatch = ActiveFilters.commodity === "all" || row.commodity === ActiveFilters.commodity;
+        const periodMatch = ActiveFilters.period === "all" || row.period === ActiveFilters.period;
+        const yearMatch = ActiveFilters.year === "all" || String(row.year) === String(ActiveFilters.year);
+        return commodityMatch && periodMatch && yearMatch;
+      });
+    }
+
+    function RenderKPIs(data) {
+      const container = document.getElementById("kpiContainer");
+      ReplaceChildren(container);
+      const metrics = CalculateMetrics(data);
+      CalculatedValues = metrics;
+      if (!data.length) {
+        AppendKPI(container, "Latest average price", "--", "No filtered rows", false);
+        AppendKPI(container, "Latest YoY change", "--", "No filtered rows", true);
+        AppendKPI(container, "6-month high", "--", "No filtered rows", false);
+        AppendKPI(container, "6-month low", "--", "No filtered rows", false);
+        AppendKPI(container, "Average price", "--", "No filtered rows", false);
+        return;
+      }
+      AppendKPI(container, "Latest average price", FormatCurrency(metrics.latestAveragePrice, "UAH"), metrics.latestDateLabel, false);
+      AppendKPI(container, "Latest YoY change", FormatPercent(metrics.latestAverageYoY), "Average across latest filtered month", metrics.latestAverageYoY > 0.25);
+      AppendKPI(container, "6-month high", FormatCurrency(metrics.sixMonthHigh, "UAH"), "Monthly average price", false);
+      AppendKPI(container, "6-month low", FormatCurrency(metrics.sixMonthLow, "UAH"), "Monthly average price", false);
+      AppendKPI(container, "Average price", FormatCurrency(metrics.averagePrice, "UAH"), metrics.filteredRows + " filtered rows", false);
+    }
+
+    function RenderChart(data) {
+      RenderLineChart(data);
+      RenderPieChart(data);
+    }
+
+    function RenderTable(data) {
+      const table = document.getElementById("dataTable");
+      const thead = table.querySelector("thead");
+      const tbody = table.querySelector("tbody");
+      ReplaceChildren(thead);
+      ReplaceChildren(tbody);
+      const headerRow = document.createElement("tr");
+      ["Date", "Commodity", "Period", "Cleaned price (UAH)", "YoY", "Price ratio"].forEach(function(label) {
+        const th = document.createElement("th");
+        th.textContent = label;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      const rows = SortByDate(data).slice(-15).reverse();
+      if (!rows.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 6;
+        td.textContent = "No data available for the selected filters.";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+      }
+      rows.forEach(function(row) {
+        const tr = document.createElement("tr");
+        [FormatDate(row.date), row.commodity, row.period, FormatCurrency(row.price_clean, "UAH"), FormatPercent(row.yoy_clean), FormatRatio(row.price_ratio_clean)].forEach(function(value) {
+          const td = document.createElement("td");
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    function UpdateDashboard() {
+      ApplyFilters();
+      RenderKPIs(FilteredData);
+      RenderChart(FilteredData);
+      RenderTopCountrySummary(FilteredData);
+      RenderTable(FilteredData);
+      RenderEmptyState(FilteredData);
+      RenderDebugPanel();
+    }
+
+    function RenderLineChart(data) {
+      const element = document.getElementById("lineChart");
+      ReplaceChildren(element);
+      const monthly = GetMonthlyAverages(data);
+      const rows = monthly.filter(function(row) { return IsFiniteNumber(row.value); });
+      if (rows.length < 2) {
+        element.textContent = "Not enough filtered data for a trend chart.";
+        return;
+      }
+      const width = 620;
+      const height = 245;
+      const padding = 40;
+      const values = rows.map(function(row) { return row.value; });
+      const min = Math.min.apply(null, values);
+      const max = Math.max.apply(null, values);
+      const span = max - min || 1;
+      const svg = CreateSVG("svg", { viewBox: "0 0 " + width + " " + height, role: "img", "aria-label": "Line chart showing average cleaned price over time" });
+      svg.appendChild(CreateSVG("line", { x1: padding, y1: height - padding, x2: width - padding, y2: height - padding, stroke: "#D9E2EA" }));
+      svg.appendChild(CreateSVG("line", { x1: padding, y1: padding, x2: padding, y2: height - padding, stroke: "#D9E2EA" }));
+      const pointValues = rows.map(function(row, index) {
+        const x = padding + (index / (rows.length - 1)) * (width - padding * 2);
+        const y = height - padding - ((row.value - min) / span) * (height - padding * 2);
+        return { x: x, y: y };
+      });
+      const polyline = CreateSVG("polyline", { points: pointValues.map(function(p) { return p.x + "," + p.y; }).join(" "), fill: "none", stroke: "#009EDB", "stroke-width": 3 });
+      svg.appendChild(polyline);
+      const lastPoint = pointValues[pointValues.length - 1];
+      svg.appendChild(CreateSVG("circle", { cx: lastPoint.x, cy: lastPoint.y, r: 4, fill: "#004987" }));
+      AppendSVGText(svg, padding, 24, "Average cleaned price (UAH)", 11);
+      AppendSVGText(svg, padding, height - 10, rows[0].label, 10);
+      AppendSVGText(svg, width - 92, height - 10, rows[rows.length - 1].label, 10);
+      element.appendChild(svg);
+    }
+
+    function RenderPieChart(data) {
+      const element = document.getElementById("pieChart");
+      ReplaceChildren(element);
+      const latestDate = GetLatestDate(data);
+      const latestRows = data.filter(function(row) { return row.date === latestDate && IsFiniteNumber(row.price_clean); });
+      if (!latestRows.length) {
+        element.textContent = "No data available for cost composition.";
+        return;
+      }
+      const grouped = GroupSumByCommodity(latestRows);
+      const entries = Object.keys(grouped).map(function(key) { return { commodity: key, value: grouped[key] }; }).sort(function(a, b) { return b.value - a.value; }).slice(0, 7);
+      const total = entries.reduce(function(sum, row) { return sum + row.value; }, 0);
+      const wrapper = document.createElement("div");
+      wrapper.style.width = "100%";
+      const note = document.createElement("p");
+      note.style.margin = "0 0 0.75rem";
+      note.style.color = "#5F6B76";
+      note.style.fontSize = "0.85rem";
+      note.textContent = "Latest filtered month: " + FormatDate(latestDate);
+      wrapper.appendChild(note);
+      const ul = document.createElement("ul");
+      ul.className = "chart-list";
+      entries.forEach(function(row) {
+        const pct = total ? row.value / total : 0;
+        const li = document.createElement("li");
+        const left = document.createElement("span");
+        const name = document.createElement("strong");
+        name.textContent = row.commodity;
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        const barFill = document.createElement("span");
+        barFill.style.width = Math.max(2, pct * 100).toFixed(1) + "%";
+        bar.appendChild(barFill);
+        left.appendChild(name);
+        left.appendChild(bar);
+        const val = document.createElement("strong");
+        val.textContent = FormatPercent(pct);
+        li.appendChild(left);
+        li.appendChild(val);
+        ul.appendChild(li);
+      });
+      wrapper.appendChild(ul);
+      element.appendChild(wrapper);
+    }
+
+    function RenderTopCountrySummary(data) {
+      const element = document.getElementById("topCountrySummary");
+      ReplaceChildren(element);
+      if (!data.length) {
+        element.textContent = "No geographic summary available for the selected filters.";
+        return;
+      }
+      const regions = data.map(function(row) { return row.admin1 || "National"; });
+      const uniqueRegions = Array.from(new Set(regions));
+      const metrics = CalculateMetrics(data);
+      const strongTitle = document.createElement("strong");
+      if (uniqueRegions.length <= 1) {
+        strongTitle.textContent = "Country-level summary";
+        element.appendChild(strongTitle);
+        element.appendChild(document.createElement("br"));
+        element.appendChild(document.createTextNode("Current dataset view is national-level or has no usable regional field."));
+        element.appendChild(document.createElement("br"));
+        element.appendChild(document.createTextNode("Latest average cleaned price: "));
+        const priceStrong = document.createElement("strong");
+        priceStrong.textContent = FormatCurrency(metrics.latestAveragePrice, "UAH");
+        element.appendChild(priceStrong);
+        element.appendChild(document.createElement("br"));
+        element.appendChild(document.createTextNode("Latest average YoY: "));
+        const yoyStrong = document.createElement("strong");
+        yoyStrong.textContent = FormatPercent(metrics.latestAverageYoY);
+        element.appendChild(yoyStrong);
+        return;
+      }
+      const grouped = GroupAverageByRegion(data);
+      const top = Object.keys(grouped).map(function(region) { return { region: region, value: grouped[region] }; }).sort(function(a, b) { return b.value - a.value; })[0];
+      strongTitle.textContent = "Region of highest filtered price pressure";
+      element.appendChild(strongTitle);
+      element.appendChild(document.createElement("br"));
+      element.appendChild(document.createTextNode(top.region + ": "));
+      const topStrong = document.createElement("strong");
+      topStrong.textContent = FormatCurrency(top.value, "UAH");
+      element.appendChild(topStrong);
+      element.appendChild(document.createTextNode(" average cleaned price"));
+    }
+
+    function RenderDebugPanel() {
+      const panel = document.getElementById("debugPanel");
+      if (!DEBUG) {
+        panel.hidden = true;
+        return;
+      }
+      panel.hidden = false;
+      document.getElementById("debugFilters").textContent = JSON.stringify(ActiveFilters, null, 2);
+      document.getElementById("debugMetrics").textContent = JSON.stringify(CalculatedValues, null, 2);
+      document.getElementById("debugData").textContent = JSON.stringify(FilteredData.slice(0, 30), null, 2);
+    }
+
+    function RenderEmptyState(data) {
+      document.getElementById("emptyState").hidden = data.length !== 0;
+    }
+
+    function CleanDataset(data) {
+      const cleaned = data.map(function(row) {
+        return {
+          date: row.date,
+          year: Number(row.year),
+          month: Number(row.month),
+          period: String(row.period || "unknown"),
+          commodity: String(row.commodity || "Unknown"),
+          price_clean: Number(row.price),
+          usdprice_clean: row.usdprice == null ? null : Number(row.usdprice),
+          yoy_clean: row.yoy_change == null ? null : Number(row.yoy_change),
+          price_ratio_clean: row.price_ratio == null ? null : Number(row.price_ratio),
+          admin1: row.admin1 || row.region || row.market || "National"
+        };
+      }).filter(function(row) {
+        return row.date && row.commodity && IsFiniteNumber(row.year) && IsFiniteNumber(row.month) && IsFiniteNumber(row.price_clean);
+      });
+      console.log("Cleaned dataset", cleaned);
+      return cleaned;
+    }
+
+    function InitializeFilters() {
+      const commodityFilter = document.getElementById("commodityFilter");
+      const yearFilter = document.getElementById("yearFilter");
+      ReplaceChildren(commodityFilter);
+      ReplaceChildren(yearFilter);
+      commodityFilter.appendChild(new Option("All commodities", "all"));
+      yearFilter.appendChild(new Option("All years", "all"));
+      Array.from(new Set(CleanedData.map(function(row) { return row.commodity; }))).sort().forEach(function(value) { commodityFilter.appendChild(new Option(value, value)); });
+      Array.from(new Set(CleanedData.map(function(row) { return row.year; }))).sort().forEach(function(value) { yearFilter.appendChild(new Option(String(value), String(value))); });
+    }
+
+    function InitializeDownloads() {
+      const menu = document.getElementById("downloadMenu");
+      ReplaceChildren(menu);
+      DatasetRegistry.forEach(function(dataset) {
+        const link = document.createElement("a");
+        link.href = dataset.href;
+        link.download = "";
+        link.textContent = dataset.label + " (" + dataset.type + ")";
+        menu.appendChild(link);
+      });
+    }
+
+    function BindEvents() {
+      document.getElementById("commodityFilter").addEventListener("change", HandleCommodityChange);
+      document.getElementById("periodFilter").addEventListener("change", HandlePeriodChange);
+      document.getElementById("yearFilter").addEventListener("change", HandleYearChange);
+      document.getElementById("resetFilters").addEventListener("click", HandleResetFilters);
+      document.getElementById("downloadButton").addEventListener("click", HandleDownloadToggle);
+    }
+
+    function HandleCommodityChange(event) { ActiveFilters.commodity = event.target.value; UpdateDashboard(); }
+    function HandlePeriodChange(event) { ActiveFilters.period = event.target.value; UpdateDashboard(); }
+    function HandleYearChange(event) { ActiveFilters.year = event.target.value; UpdateDashboard(); }
+    function HandleResetFilters() {
+      ActiveFilters.commodity = "all";
+      ActiveFilters.period = "all";
+      ActiveFilters.year = "all";
+      document.getElementById("commodityFilter").value = "all";
+      document.getElementById("periodFilter").value = "all";
+      document.getElementById("yearFilter").value = "all";
+      UpdateDashboard();
+    }
+    function HandleDownloadToggle() {
+      const button = document.getElementById("downloadButton");
+      const menu = document.getElementById("downloadMenu");
+      const isOpen = menu.classList.toggle("is-open");
+      button.setAttribute("aria-expanded", String(isOpen));
+    }
+
+    function VerifyDOMElements() {
+      const missing = RequiredDOMIds.filter(function(id) { return !document.getElementById(id); });
+      if (missing.length > 0) {
+        ShowError("Dashboard setup error: missing DOM elements: " + missing.join(", ") + ".");
+        return false;
+      }
+      return true;
+    }
+
+    function CalculateMetrics(data) {
+      if (!data.length) { return { filteredRows: 0 }; }
+      const monthly = GetMonthlyAverages(data);
+      const latestDate = GetLatestDate(data);
+      const latestRows = data.filter(function(row) { return row.date === latestDate; });
+      const latestPrices = latestRows.map(function(row) { return row.price_clean; }).filter(IsFiniteNumber);
+      const latestYoYs = latestRows.map(function(row) { return row.yoy_clean; }).filter(IsFiniteNumber);
+      const prices = data.map(function(row) { return row.price_clean; }).filter(IsFiniteNumber);
+      const sixMonths = monthly.slice(-6).map(function(row) { return row.value; }).filter(IsFiniteNumber);
+      return {
+        filteredRows: data.length,
+        latestDate: latestDate,
+        latestDateLabel: "Latest month: " + FormatDate(latestDate),
+        latestAveragePrice: Average(latestPrices),
+        latestAverageYoY: latestYoYs.length ? Average(latestYoYs) : null,
+        sixMonthHigh: sixMonths.length ? Math.max.apply(null, sixMonths) : null,
+        sixMonthLow: sixMonths.length ? Math.min.apply(null, sixMonths) : null,
+        averagePrice: Average(prices),
+        minPrice: Math.min.apply(null, prices),
+        maxPrice: Math.max.apply(null, prices)
+      };
+    }
+
+    function GetMonthlyAverages(data) {
+      const grouped = data.reduce(function(acc, row) {
+        const key = row.year + "-" + String(row.month).padStart(2, "0");
+        if (!acc[key]) { acc[key] = []; }
+        acc[key].push(row.price_clean);
+        return acc;
+      }, {});
+      return Object.keys(grouped).sort().map(function(key) { return { label: key, value: Average(grouped[key]) }; });
+    }
+    function GetLatestDate(data) { const sorted = SortByDate(data); return sorted.length ? sorted[sorted.length - 1].date : null; }
+    function SortByDate(data) { return data.slice().sort(function(a, b) { return new Date(a.date) - new Date(b.date); }); }
+    function GroupSumByCommodity(data) { return data.reduce(function(acc, row) { acc[row.commodity] = (acc[row.commodity] || 0) + row.price_clean; return acc; }, {}); }
+    function GroupAverageByRegion(data) {
+      const values = data.reduce(function(acc, row) { const region = row.admin1 || "Unknown"; if (!acc[region]) { acc[region] = []; } acc[region].push(row.price_clean); return acc; }, {});
+      return Object.keys(values).reduce(function(acc, region) { acc[region] = Average(values[region]); return acc; }, {});
+    }
+    function Average(values) { const clean = values.filter(IsFiniteNumber); if (!clean.length) { return null; } return clean.reduce(function(sum, value) { return sum + value; }, 0) / clean.length; }
+    function IsFiniteNumber(value) { return Number.isFinite(value); }
+    function FormatCurrency(value, label) { if (!IsFiniteNumber(Number(value))) { return "--"; } return Number(value).toFixed(2) + " " + label; }
+    function FormatPercent(value) { if (!IsFiniteNumber(Number(value))) { return "--"; } return (Number(value) * 100).toFixed(1) + "%"; }
+    function FormatRatio(value) { if (!IsFiniteNumber(Number(value))) { return "--"; } return Number(value).toFixed(2) + "×"; }
+    function FormatDate(value) { if (!value) { return "--"; } const date = new Date(value); if (Number.isNaN(date.getTime())) { return "--"; } return date.toISOString().slice(0, 10); }
+    function AppendKPI(container, labelText, valueText, metaText, isAlert) {
+      const card = document.createElement("div");
+      card.className = isAlert ? "kpi-card kpi-card--alert" : "kpi-card";
+      const label = document.createElement("p");
+      label.className = "kpi-card__label";
+      label.textContent = labelText;
+      const value = document.createElement("p");
+      value.className = "kpi-card__value";
+      value.textContent = valueText;
+      const meta = document.createElement("div");
+      meta.className = "kpi-card__meta";
+      meta.textContent = metaText || "";
+      card.appendChild(label);
+      card.appendChild(value);
+      card.appendChild(meta);
+      container.appendChild(card);
+    }
+    function CreateSVG(tagName, attributes) {
+      const element = document.createElementNS("http://www.w3.org/2000/svg", tagName);
+      Object.keys(attributes).forEach(function(key) { element.setAttribute(key, attributes[key]); });
+      return element;
+    }
+    function AppendSVGText(svg, x, y, textValue, fontSize) {
+      const text = CreateSVG("text", { x: x, y: y, "font-size": fontSize, fill: "#5F6B76" });
+      text.textContent = textValue;
+      svg.appendChild(text);
+    }
+    function ReplaceChildren(element) {
+      while (element.firstChild) { element.removeChild(element.firstChild); }
+    }
+    function ShowError(message) { const element = document.getElementById("errorMessage"); if (!element) { return; } element.textContent = message; element.hidden = false; }
+    function HideError() { const element = document.getElementById("errorMessage"); if (!element) { return; } element.textContent = ""; element.hidden = true; }
+    function HideLoading() { document.getElementById("loadingMessage").hidden = true; }
+    function StartDashboard() {
+      if (!VerifyDOMElements()) { return; }
+      InitializeDownloads();
+      BindEvents();
+      LoadData().then(function(data) {
+        HideLoading();
+        if (!ValidateData(data)) { return; }
+        RawData = data.slice();
+        CleanedData = CleanDataset(RawData);
+        if (!CleanedData.length) {
+          ShowError("The cleaned dataset has no usable rows after validation. Please check the source fields and numeric price values.");
+          return;
+        }
+        InitializeFilters();
+        UpdateDashboard();
+      });
+    }
+    StartDashboard();
+  </script>
+</body>
+</html>
